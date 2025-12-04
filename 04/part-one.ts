@@ -1,9 +1,9 @@
-const fs = require('fs');
+import fs from 'fs';
 
-function getSet(data) {
-    const set = new Set();
+function getSet(data: string): Set<string> {
+    const set = new Set<string>();
 
-    dataLines = data.split('\r\n');
+    const dataLines: string[] = data.split('\r\n');
 
     for (let y = 0; y < dataLines.length; y++) {
         const arr = Array.from(dataLines[y]);
@@ -18,10 +18,10 @@ function getSet(data) {
     return set;
 }
 
-function lessThanFourAdjacent(data, set) {
+function lessThanFourAdjacent(data: string, set: Set<string>) {
     let amount = 0;
 
-    dataLines = data.split('\r\n');
+    const dataLines: string[] = data.split('\r\n');
 
     for (let y = 0; y < dataLines.length; y++) {
         const arr = Array.from(dataLines[y]);
@@ -49,7 +49,7 @@ function lessThanFourAdjacent(data, set) {
     return amount;
 }
 
-tuple = (a, b) => `${a},${b}`;
+const tuple = (a: number, b: number) => `${a},${b}`;
 
 function main() {
     const data = fs.readFileSync('input.txt', 'utf8');

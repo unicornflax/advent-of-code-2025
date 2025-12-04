@@ -1,12 +1,12 @@
-const fs = require('fs');
+import fs from 'fs';
 
-function getSet(data) {
-    const set = new Set();
+function getSet(data: string): Set<string> {
+    const set = new Set<string>();
 
-    dataLines = data.split('\r\n');
+    const dataLines: string[] = data.split('\r\n');
 
     for (let y = 0; y < dataLines.length; y++) {
-        const arr = Array.from(dataLines[y]);
+        const arr = [...dataLines[y]];
 
         for (let x = 0; x < arr.length; x++) {
             if (arr[x] === '@') {
@@ -18,7 +18,7 @@ function getSet(data) {
     return set;
 }
 
-function removeUntilDepleted(data, rollSet) {
+function removeUntilDepleted(data: string, rollSet: Set<string>) {
     let total = 0;
     let amount = 0;
 
@@ -32,10 +32,10 @@ function removeUntilDepleted(data, rollSet) {
     return total;
 }
 
-function removeValidRolls(data, rollSet) {
+function removeValidRolls(data: string, rollSet: Set<string>): [Set<string>, number] {
     const toBeRemoved = new Set();
 
-    dataLines = data.split('\r\n');
+    const dataLines = data.split('\r\n');
 
     for (let y = 0; y < dataLines.length; y++) {
         const arr = [...dataLines[y]];
@@ -64,7 +64,7 @@ function removeValidRolls(data, rollSet) {
 }
 
 // we need non-reference key for unique set values
-tuple = (a, b) => `${a},${b}`;
+const tuple = (a: number, b: number) => `${a},${b}`;
 
 function main() {
     const data = fs.readFileSync('input.txt', 'utf8');
