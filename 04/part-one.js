@@ -1,5 +1,4 @@
 const fs = require('fs');
-const { availableMemory } = require('process');
 
 function getSet(data) {
     const set = new Set();

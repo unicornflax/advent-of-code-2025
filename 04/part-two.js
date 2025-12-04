@@ -1,5 +1,4 @@
 const fs = require('fs');
-const { availableMemory } = require('process');
 
 function getSet(data) {
     const set = new Set();
@@ -47,6 +46,7 @@ function removeValidRolls(data, rollSet) {
 
             let adjacent = 0;
 
+            // check adjacent with offset
             for (let y_Offset = -1; y_Offset <= 1; y_Offset++) {
                 for (let x_Offset = -1; x_Offset <= 1; x_Offset++) {
                     // filter self
