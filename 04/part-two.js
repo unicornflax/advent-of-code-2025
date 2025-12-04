@@ -1,0 +1,78 @@
+const fs = require('fs');
+const { availableMemory } = require('process');
+
+function getSet(data) {
+    const set = new Set();
+
+    dataLines = data.split('\r\n');
+
+    for (let y = 0; y < dataLines.length; y++) {
+        const arr = Array.from(dataLines[y]);
+
+        for (let x = 0; x < arr.length; x++) {
+            if (arr[x] === '@') {
+                set.add(tuple(x, y));
+            }
+        }
+    }
+
+    return set;
+}
+
+function removeUntilDepleted(data, rollSet) {
+    let total = 0;
+    let amount = 0;
+
+    while (true) {
+        [rollSet, amount] = removeValidRolls(data, rollSet);
+        if (!amount) break;
+
+        total += amount;
+    }
+
+    return total;
+}
+
+function removeValidRolls(data, rollSet) {
+    const toBeRemoved = new Set();
+
+    dataLines = data.split('\r\n');
+
+    for (let y = 0; y < dataLines.length; y++) {
+        const arr = [...dataLines[y]];
+
+        for (let x = 0; x < arr.length; x++) {
+            // self is not a roll
+            if (!rollSet.has(tuple(x, y))) continue;
+
+            let adjacent = 0;
+
+            for (let y_Offset = -1; y_Offset <= 1; y_Offset++) {
+                for (let x_Offset = -1; x_Offset <= 1; x_Offset++) {
+                    // filter self
+                    if (!y_Offset && !x_Offset) continue;
+
+                    if (rollSet.has(tuple(x + x_Offset, y + y_Offset))) adjacent++;
+                }
+            }
+
+            if (adjacent < 4) toBeRemoved.add(tuple(x, y));
+        }
+    }
+
+    return [new Set([...rollSet].filter(x => !toBeRemoved.has(x))), toBeRemoved.size];
+}
+
+// we need non-reference key for unique set values
+tuple = (a, b) => `${a},${b}`;
+
+function main() {
+    const data = fs.readFileSync('input.txt', 'utf8');
+    // const data = fs.readFileSync('input-test.txt', 'utf8');
+
+    const set = getSet(data);
+    const result = removeUntilDepleted(data, set);
+    console.log(result);
+}
+
+main();
