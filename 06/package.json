@@ -1,0 +1,8 @@
+{
+    "name": "06",
+    "version": "1.0.0",
+    "type": "module",
+    "devDependencies": {
+        "@types/node": "^24.10.1"
+    }
+}
