@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import fs = require('fs');
 
 function reduceRangesOnce(ranges: number[][]): number[][] {
     const reduced: number[][] = [];
@@ -14,11 +14,11 @@ function reduceRangesOnce(ranges: number[][]): number[][] {
 
             if (alreadyMerged.includes(rangeB)) continue;
 
-            const startA = rangeA[0];
-            const endA = rangeA[1];
+            const startA = rangeA[0]!;
+            const endA = rangeA[1]!;
 
-            const startB = rangeB[0];
-            const endB = rangeB[1];
+            const startB = rangeB[0]!;
+            const endB = rangeB[1]!;
 
             let newStart = null;
             let newEnd = null;
@@ -51,8 +51,8 @@ function getRangeSizes(ranges: number[][]): number {
     let gather = 0;
 
     for (let range of ranges) {
-        const start = range[0];
-        const end = range[1];
+        const start = range[0]!;
+        const end = range[1]!;
 
         gather += end - start + 1;
     }
@@ -65,7 +65,7 @@ function main() {
     // const inputPath = 'input-test.txt';
     // const inputPath = 'input-test2.txt';
 
-    const data = fs.readFileSync(inputPath, 'utf8').split('\r\n\r\n')[0];
+    const data = fs.readFileSync(inputPath, 'utf8').split('\r\n\r\n')[0] as string;
 
     let ranges = data.split('\r\n').map(x => x.split('-', 2).map(x => +x));
 
