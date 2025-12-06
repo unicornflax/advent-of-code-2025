@@ -1,5 +1,17 @@
 import fs from 'fs';
 
+function parseGroup(currentOp: string, buffer: number[]) {
+    if (currentOp == '+') {
+        const temp = buffer.reduce((a, b) => a + b);
+        buffer.splice(0, buffer.length);
+        return temp;
+    } else {
+        const temp = buffer.reduce((a, b) => a * b);
+        buffer.splice(0, buffer.length);
+        return temp;
+    }
+}
+
 function parseData(data: string, opRowIndex: number) {
     const rows = data.split('\r\n');
 
@@ -17,30 +29,14 @@ function parseData(data: string, opRowIndex: number) {
 
         // case end of group => calculate
         if (vertical.every(x => x === ' ')) {
-            if (currentOp == '+') {
-                const temp = buffer.reduce((a, b) => a + b);
-                buffer.splice(0, buffer.length);
-                gather += temp;
-            } else {
-                const temp = buffer.reduce((a, b) => a * b);
-                buffer.splice(0, buffer.length);
-                gather += temp;
-            }
+            gather += parseGroup(currentOp, buffer);
         } else {
             buffer.push(+vertical.join(''));
         }
     }
 
     // at the end calc group
-    if (currentOp == '+') {
-        const temp = buffer.reduce((a, b) => a + b);
-        buffer.splice(0, buffer.length);
-        gather += temp;
-    } else {
-        const temp = buffer.reduce((a, b) => a * b);
-        buffer.splice(0, buffer.length);
-        gather += temp;
-    }
+    gather += parseGroup(currentOp, buffer);
 
     return gather;
 }
