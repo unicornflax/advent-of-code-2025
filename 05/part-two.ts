@@ -2,17 +2,17 @@ import * as fs from 'fs';
 
 function reduceRangesOnce(ranges: number[][]): number[][] {
     const reduced: number[][] = [];
-    const merged: number[][] = [];
+    const alreadyMerged: number[][] = [];
 
     for (let rangeA of ranges) {
-        if (merged.includes(rangeA)) continue;
+        if (alreadyMerged.includes(rangeA)) continue;
 
-        if (merged.includes(rangeA)) continue;
+        if (alreadyMerged.includes(rangeA)) continue;
 
         for (let rangeB of ranges) {
             if (rangeA === rangeB) continue;
 
-            if (merged.includes(rangeB)) continue;
+            if (alreadyMerged.includes(rangeB)) continue;
 
             const startA = rangeA[0];
             const endA = rangeA[1];
@@ -36,12 +36,12 @@ function reduceRangesOnce(ranges: number[][]): number[][] {
             if (newStart !== null || newEnd !== null) {
                 // remove a, b => add combined
                 reduced.push([newStart ?? startA, newEnd ?? endA]);
-                merged.push(rangeA, rangeB);
+                alreadyMerged.push(rangeA, rangeB);
                 break;
             }
         }
 
-        if (!merged.includes(rangeA)) reduced.push(rangeA);
+        if (!alreadyMerged.includes(rangeA)) reduced.push(rangeA);
     }
 
     return reduced;
@@ -52,10 +52,9 @@ function getRangeSizes(ranges: number[][]): number {
 
     for (let range of ranges) {
         const start = range[0];
-        const end_ = range[1];
+        const end = range[1];
 
-        // TODO `+1` or `+2`?
-        gather += end_ - start + 1;
+        gather += end - start + 1;
     }
 
     return gather;
