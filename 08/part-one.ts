@@ -7,32 +7,24 @@ function calcDistance(a: number[], b: number[]): number {
     const [x1, y1, z1] = a;
     const [x2, y2, z2] = b;
 
-    const diff = [x2 - x1, y2 - x1, z2 - z1];
+    const diffVec = [x2 - x1, y2 - y1, z2 - z1];
 
-    return Math.sqrt(diff.map(num => num ** 2).reduce((a, b) => a + b));
+    return Math.sqrt(diffVec.map(component => component ** 2).reduce((a, b) => a + b));
 }
 
-function coordToString(c: number[]) {
-    return c.join();
-}
-
-function stringToCoord(s: string) {
-    return s.split(coordInnerSep);
-}
-
-function parseData(data: string) {
+function parseData(data: string, iterations: number) {
     // TODO: optimize map/arr usage
     const rows = data.split('\r\n');
-    const coordMap: Map<string, number[]> = new Map();
+    const coordMap: [string, number[]][] = [];
     const distances = new Map<string, number>();
 
     // parse data
     for (let box of rows) {
         const coords = box.split(',', 3).map(x => +x);
-        coordMap.set(box, coords);
+        coordMap.push([box, coords]);
     }
 
-    for (let [keyA, valueA] of [...coordMap]) {
+    for (let [keyA, valueA] of coordMap) {
         for (let [keyB, valueB] of [...coordMap]) {
             if (valueA === valueB) {
                 continue;
@@ -48,13 +40,13 @@ function parseData(data: string) {
         }
     }
 
-    const sortedDistances = [...distances].sort(([_, distA], [__, distB]) => distA - distB);
+    const sortedDistances = [...distances]
+        .sort(([_, distA], [__, distB]) => distA - distB)
+        .map(([key, _]) => key);
     let circuits: Set<string>[] = [];
 
-    for (let i = 0; i < 1000; i++) {
-        const [key, dist] = sortedDistances[i];
-
-        const [keyA, keyB] = key.split(coordSep);
+    for (let i = 0; i < iterations; i++) {
+        const [keyA, keyB] = sortedDistances[i].split(coordSep);
 
         let circuitA;
         let circuitB;
@@ -73,11 +65,16 @@ function parseData(data: string) {
         }
 
         // same circuit
-        else if (circuitA === circuitB) continue;
+        else if (circuitA === circuitB) {
+            continue;
+        }
         // both in circuits => merge circuits
         else if (circuitA && circuitB) {
-            const temp: Set<string> = new Set([...circuitA, ...circuitB]);
-            circuitA = temp;
+            // merge into a, but keep reference
+            circuitB.forEach(x => circuitA.add(x));
+
+            // remove b
+            circuits.splice(circuits.indexOf(circuitB), 1);
         }
 
         // only a in circuit
@@ -99,7 +96,7 @@ function parseData(data: string) {
 
     console.log(temp);
 
-    return temp.map(x => x.size).reduce((a, b) => a + b);
+    return temp.map(x => x.size).reduce((a, b) => a * b);
 }
 
 function main() {
@@ -107,7 +104,8 @@ function main() {
     // const inputPath = 'input-test.txt';
 
     const data = fs.readFileSync(inputPath, 'utf8');
-    const result = parseData(data);
+    const result = parseData(data, 1000);
+    // const result = parseData(data, 10);
 
     console.log(result);
 }
