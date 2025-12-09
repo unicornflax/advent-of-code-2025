@@ -20,7 +20,7 @@ function parseData(data: string, iterations: number) {
 
     // parse data
     for (let box of rows) {
-        const coords = box.split(',', 3).map(x => +x);
+        const coords = box.split(coordInnerSep, 3).map(x => +x);
         coordMap.push([box, coords]);
     }
 

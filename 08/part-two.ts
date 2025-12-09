@@ -1,69 +1,123 @@
 import fs from 'fs';
 
-function parseData(data: string): number {
-    const rows = data.split('\r\n');
+const coordInnerSep = ',';
+const coordSep = '|';
 
-    // tracks the active beam indices + how many timelines run through
-    let activeBeams = new Map<number, number>();
+function calcDistance(a: number[], b: number[]): number {
+    const [x1, y1, z1] = a;
+    const [x2, y2, z2] = b;
 
-    for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        const removeBeamIndices = new Set<number>();
+    const diffVec = [x2 - x1, y2 - y1, z2 - z1];
 
-        if (i % 2 === 1) {
-            continue;
-        }
-
-        for (let j = 0; j < row.length; j++) {
-            const char = row[j];
-
-            if (!i) {
-                if (char === 'S') {
-                    activeBeams.set(j, 1);
-                    break;
-                }
-                continue;
-            }
-
-            if (char === '.') {
-                continue;
-            }
-
-            const currentColumnBeamAmount = activeBeams.get(j);
-
-            if (!currentColumnBeamAmount) {
-                continue;
-            }
-
-            removeBeamIndices.add(j);
-
-            // TODO handle overlap?
-
-            // keep inside range borders
-            if (j) {
-                activeBeams.set(j - 1, (activeBeams.get(j - 1) ?? 0) + currentColumnBeamAmount);
-            }
-
-            if (j < rows.length - 1) {
-                activeBeams.set(j + 1, (activeBeams.get(j + 1) ?? 0) + currentColumnBeamAmount);
-            }
-        }
-
-        activeBeams = new Map([...activeBeams].filter(([key, _]) => !removeBeamIndices.has(key)));
-    }
-
-    return [...activeBeams].map(([_, value]) => value).reduce((a, b) => a + b);
+    return Math.sqrt(diffVec.map(component => component ** 2).reduce((a, b) => a + b));
 }
 
-/*
-RUNTIME ERROR => NEED TO FIND OTHER APPROACH
-*/
+function parseData(data: string) {
+    // TODO: optimize map/arr usage
+    const rows = data.split('\r\n');
+    const coordArr: [string, number[]][] = [];
+    const distances = new Map<string, number>();
+
+    // parse data
+    for (let box of rows) {
+        const coords = box.split(coordInnerSep, 3).map(x => +x);
+        coordArr.push([box, coords]);
+    }
+
+    for (let [keyA, valueA] of coordArr) {
+        for (let [keyB, valueB] of [...coordArr]) {
+            if (valueA === valueB) {
+                continue;
+            }
+
+            const combinedKey = [keyA, keyB].sort().join(coordSep);
+
+            if (distances.has(combinedKey)) {
+                continue;
+            }
+
+            distances.set(combinedKey, calcDistance(valueA, valueB));
+        }
+    }
+
+    const sortedDistances = [...distances]
+        .sort(([_, distA], [__, distB]) => distA - distB)
+        .map(([key, _]) => key);
+    let circuits: Set<string>[] = [];
+
+    let keyA;
+    let keyB;
+
+    while (circuits.length !== 1) {
+        for (let i = 0; i < sortedDistances.length; i++) {
+            if (circuits.length === 1 && circuits[0].size === coordArr.length) {
+                console.log();
+                // break;
+            }
+
+            [keyA, keyB] = sortedDistances[i].split(coordSep);
+
+            let circuitA;
+            let circuitB;
+
+            // find circuit of a,b
+            for (let circuit of circuits) {
+                if (!circuitA && circuit.has(keyA)) circuitA = circuit;
+                if (!circuitB && circuit.has(keyB)) circuitB = circuit;
+
+                if (circuitA && circuitB) break;
+            }
+
+            // none in circuit => new circuit with both
+            if (!circuitA && !circuitB) {
+                circuits.push(new Set([keyA, keyB]));
+            }
+
+            // same circuit
+            else if (circuitA === circuitB) {
+                continue;
+            }
+            // both in circuits => merge circuits
+            else if (circuitA && circuitB) {
+                // merge into a, but keep reference
+                circuitB.forEach(x => circuitA.add(x));
+
+                // remove b
+                circuits.splice(circuits.indexOf(circuitB), 1);
+            }
+
+            // only a in circuit
+            else if (circuitA) {
+                circuitA.add(keyB);
+            }
+
+            // only b in circuit
+            else if (circuitB) {
+                circuitB.add(keyA);
+            } else {
+                console.error(circuitA, circuitB);
+            }
+        }
+
+        console.log(circuits.length);
+    }
+
+    circuits = circuits.sort((a, b) => b.size - a.size);
+
+    const temp = circuits.slice(0, 3);
+
+    console.log(temp);
+    console.log(keyA, keyB);
+
+    return temp.map(x => x.size).reduce((a, b) => a * b);
+}
 
 function main() {
-    const inputPath = 'input.txt';
-    // const inputPath = 'input-test.txt';
+    // const inputPath = 'input.txt';
+    const inputPath = 'input-test.txt';
 
     const data = fs.readFileSync(inputPath, 'utf8');
+    // const result = parseData(data);
     const result = parseData(data);
 
     console.log(result);
