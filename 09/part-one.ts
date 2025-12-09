@@ -1,102 +1,41 @@
 import fs from 'fs';
 
-const coordInnerSep = ',';
-const coordSep = '|';
-
-function calcDistance(a: number[], b: number[]): number {
-    const [x1, y1, z1] = a;
-    const [x2, y2, z2] = b;
-
-    const diffVec = [x2 - x1, y2 - y1, z2 - z1];
-
-    return Math.sqrt(diffVec.map(component => component ** 2).reduce((a, b) => a + b));
+function calcArea(a: [number, number], b: [number, number]): number {
+    return (Math.abs(a[0] - b[0]) + 1) * (Math.abs(a[1] - b[1]) + 1);
 }
 
-function parseData(data: string, iterations: number) {
-    // TODO: optimize map/arr usage
+function parseData(data: string) {
     const rows = data.split('\r\n');
-    const coordMap: [string, number[]][] = [];
-    const distances = new Map<string, number>();
 
-    // parse data
-    for (let box of rows) {
-        const coords = box.split(coordInnerSep, 3).map(x => +x);
-        coordMap.push([box, coords]);
-    }
+    let minX: [number, number] = [Infinity, 0];
+    let maxX: [number, number] = [-Infinity, 0];
+    let minY: [number, number] = [0, Infinity];
+    let maxY: [number, number] = [0, -Infinity];
 
-    for (let [keyA, valueA] of coordMap) {
-        for (let [keyB, valueB] of [...coordMap]) {
-            if (valueA === valueB) {
-                continue;
-            }
+    for (let row of rows) {
+        const [x, y] = row.split(',').map(n => +n);
+        const pair: [number, number] = [x, y];
 
-            const combinedKey = [keyA, keyB].sort().join(coordSep);
-
-            if (distances.has(combinedKey)) {
-                continue;
-            }
-
-            distances.set(combinedKey, calcDistance(valueA, valueB));
+        if (x < minX[0]) {
+            minX = pair;
+        }
+        if (x > maxX[0]) {
+            maxX = pair;
+        }
+        if (y < minY[1]) {
+            minY = pair;
+        }
+        if (y > maxY[1]) {
+            maxY = pair;
         }
     }
 
-    const sortedDistances = [...distances]
-        .sort(([_, distA], [__, distB]) => distA - distB)
-        .map(([key, _]) => key);
-    let circuits: Set<string>[] = [];
-
-    for (let i = 0; i < iterations; i++) {
-        const [keyA, keyB] = sortedDistances[i].split(coordSep);
-
-        let circuitA;
-        let circuitB;
-
-        // find circuit of a,b
-        for (let circuit of circuits) {
-            if (!circuitA && circuit.has(keyA)) circuitA = circuit;
-            if (!circuitB && circuit.has(keyB)) circuitB = circuit;
-
-            if (circuitA && circuitB) break;
-        }
-
-        // none in circuit => new circuit with both
-        if (!circuitA && !circuitB) {
-            circuits.push(new Set([keyA, keyB]));
-        }
-
-        // same circuit
-        else if (circuitA === circuitB) {
-            continue;
-        }
-        // both in circuits => merge circuits
-        else if (circuitA && circuitB) {
-            // merge into a, but keep reference
-            circuitB.forEach(x => circuitA.add(x));
-
-            // remove b
-            circuits.splice(circuits.indexOf(circuitB), 1);
-        }
-
-        // only a in circuit
-        else if (circuitA) {
-            circuitA.add(keyB);
-        }
-
-        // only b in circuit
-        else if (circuitB) {
-            circuitB.add(keyA);
-        } else {
-            console.error(circuitA, circuitB);
-        }
-    }
-
-    circuits = circuits.sort((a, b) => b.size - a.size);
-
-    const temp = circuits.slice(0, 3);
-
-    console.log(temp);
-
-    return temp.map(x => x.size).reduce((a, b) => a * b);
+    return Math.max(
+        calcArea(minX, maxX),
+        calcArea(minX, maxY),
+        calcArea(maxX, minY),
+        calcArea(maxX, maxY)
+    );
 }
 
 function main() {
@@ -104,8 +43,8 @@ function main() {
     // const inputPath = 'input-test.txt';
 
     const data = fs.readFileSync(inputPath, 'utf8');
-    const result = parseData(data, 1000);
-    // const result = parseData(data, 10);
+    const result = parseData(data);
+    // const result = parseData(data);
 
     console.log(result);
 }
