@@ -9,23 +9,24 @@ function calcDistance(a: number[], b: number[]): number {
 
     const diffVec = [x2 - x1, y2 - y1, z2 - z1];
 
+    // TODO remove `sqrt`
     return Math.sqrt(diffVec.map(component => component ** 2).reduce((a, b) => a + b));
 }
 
 function parseData(data: string) {
     // TODO: optimize map/arr usage
     const rows = data.split('\r\n');
-    const coordArr: [string, number[]][] = [];
+    const coordMap: Map<string, number[]> = new Map();
     const distances = new Map<string, number>();
 
     // parse data
     for (let box of rows) {
         const coords = box.split(coordInnerSep, 3).map(x => +x);
-        coordArr.push([box, coords]);
+        coordMap.set(box, coords);
     }
 
-    for (let [keyA, valueA] of coordArr) {
-        for (let [keyB, valueB] of [...coordArr]) {
+    for (let [keyA, valueA] of coordMap) {
+        for (let [keyB, valueB] of [...coordMap]) {
             if (valueA === valueB) {
                 continue;
             }
@@ -48,11 +49,10 @@ function parseData(data: string) {
     let keyA;
     let keyB;
 
-    while (circuits.length !== 1) {
+    while (true) {
         for (let i = 0; i < sortedDistances.length; i++) {
-            if (circuits.length === 1 && circuits[0].size === coordArr.length) {
-                console.log();
-                // break;
+            if (circuits.length === 1 && circuits[0].size === coordMap.size) {
+                return coordMap.get(keyA!)![0] * coordMap.get(keyB!)![0];
             }
 
             [keyA, keyB] = sortedDistances[i].split(coordSep);
@@ -101,24 +101,15 @@ function parseData(data: string) {
 
         console.log(circuits.length);
     }
-
-    circuits = circuits.sort((a, b) => b.size - a.size);
-
-    const temp = circuits.slice(0, 3);
-
-    console.log(temp);
-    console.log(keyA, keyB);
-
-    return temp.map(x => x.size).reduce((a, b) => a * b);
 }
 
 function main() {
-    // const inputPath = 'input.txt';
-    const inputPath = 'input-test.txt';
+    const inputPath = 'input.txt';
+    // const inputPath = 'input-test.txt';
 
     const data = fs.readFileSync(inputPath, 'utf8');
-    // const result = parseData(data);
     const result = parseData(data);
+    // const result = parseData(data);
 
     console.log(result);
 }
