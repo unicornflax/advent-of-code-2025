@@ -9,8 +9,8 @@ function calcDistance(a: number[], b: number[]): number {
 
     const diffVec = [x2 - x1, y2 - y1, z2 - z1];
 
-    // TODO remove `sqrt`
-    return Math.sqrt(diffVec.map(component => component ** 2).reduce((a, b) => a + b));
+    // we don't need sqrt
+    return diffVec.map(component => component ** 2).reduce((a, b) => a + b);
 }
 
 function parseData(data: string) {
